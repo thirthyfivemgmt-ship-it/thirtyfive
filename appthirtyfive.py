@@ -78,7 +78,7 @@ def inject_dynamic_css(mode):
             border: 1px solid {border_card};
             transition: all 0.25s ease-in-out;
             margin-bottom: 16px;
-        }
+        }}
         .fintech-card:hover {{
             transform: translateY(-2px);
         }}
