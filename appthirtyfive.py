@@ -5,7 +5,7 @@ import numpy as np
 from datetime import datetime, timedelta
 
 # ==============================================================================
-# 1. CONFIGURAZIONE PAGINA E GESTIONE DINAMICA TEMMA (LIGHT / DARK SWITCHER)
+# 1. CONFIGURAZIONE PAGINA E GESTIONE DINAMICA TEMA (LIGHT / DARK SWITCHER)
 # ==============================================================================
 st.set_page_config(
     page_title="Thirtyfive | Financial BI",
@@ -20,7 +20,6 @@ if "theme_mode" not in st.session_state:
 
 def inject_dynamic_css(mode):
     if mode == "Dark (Pro FinTech)":
-        # Palette Dark pulita ed elegante stile Bloomberg/Stripe Dark
         bg_app = "#0E1117"
         bg_card = "#161B22"
         border_card = "#30363D"
@@ -29,7 +28,6 @@ def inject_dynamic_css(mode):
         empty_bg = "#161B22"
         empty_border = "#30363D"
     else:
-        # Palette Light pulita Material Design Google
         bg_app = "#F8F9FA"
         bg_card = "#FFFFFF"
         border_card = "#E8EAED"
@@ -65,12 +63,12 @@ def inject_dynamic_css(mode):
             color: {text_main} !important;
             margin-bottom: 0.1rem;
             letter-spacing: -0.5px;
-        }
+        }}
         .greeting-sub {{
             font-size: 1rem;
             color: {text_sub} !important;
             margin-bottom: 2rem;
-        }
+        }}
 
         .fintech-card {{
             background-color: {bg_card} !important;
@@ -151,7 +149,6 @@ def inject_dynamic_css(mode):
     </style>
     """, unsafe_allow_html=True)
 
-# Inietta il CSS in base alla scelta dell'utente
 inject_dynamic_css(st.session_state.theme_mode)
 
 # ==============================================================================
@@ -301,7 +298,6 @@ default_index = merchant_names.index("Mario") if "Mario" in merchant_names else 
 
 with st.sidebar:
     st.markdown("### 🎨 Aspetto Grafico")
-    # THEME SWITCHER FORZATO
     selected_theme = st.radio(
         "Seleziona Tema Interfaccia:",
         ["Light (Google Style)", "Dark (Pro FinTech)"],
