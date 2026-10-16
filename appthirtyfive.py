@@ -5,136 +5,157 @@ import numpy as np
 from datetime import datetime, timedelta
 
 # ==============================================================================
-# 1. CONFIGURAZIONE PAGINA E CSS "STEALTH" (STILE GOOGLE & STRIPE)
+# 1. CONFIGURAZIONE PAGINA E GESTIONE DINAMICA TEMMA (LIGHT / DARK SWITCHER)
 # ==============================================================================
 st.set_page_config(
     page_title="Thirtyfive | Financial BI",
     page_icon="📊",
     layout="wide",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="expanded"
 )
 
-def inject_enterprise_css():
-    st.markdown("""
+# Inizializza lo stato del tema se non esiste
+if "theme_mode" not in st.session_state:
+    st.session_state.theme_mode = "Light (Google Style)"
+
+def inject_dynamic_css(mode):
+    if mode == "Dark (Pro FinTech)":
+        # Palette Dark pulita ed elegante stile Bloomberg/Stripe Dark
+        bg_app = "#0E1117"
+        bg_card = "#161B22"
+        border_card = "#30363D"
+        text_main = "#F0F6FC"
+        text_sub = "#8B949E"
+        empty_bg = "#161B22"
+        empty_border = "#30363D"
+    else:
+        # Palette Light pulita Material Design Google
+        bg_app = "#F8F9FA"
+        bg_card = "#FFFFFF"
+        border_card = "#E8EAED"
+        text_main = "#202124"
+        text_sub = "#5F6368"
+        empty_bg = "#FFFFFF"
+        empty_border = "#DADCE0"
+
+    st.markdown(f"""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
 
-        .stApp {
-            background-color: #F8F9FA !important;
+        .stApp {{
+            background-color: {bg_app} !important;
             font-family: 'Roboto', sans-serif !important;
-            color: #202124 !important;
-        }
+            color: {text_main} !important;
+        }}
 
-        #MainMenu {visibility: hidden;}
-        header {visibility: hidden;}
-        footer {visibility: hidden;}
-        .stDeployButton {display: none !important;}
+        #MainMenu {{visibility: hidden;}}
+        header {{visibility: hidden;}}
+        footer {{visibility: hidden;}}
+        .stDeployButton {{display: none !important;}}
 
-        .block-container {
+        .block-container {{
             padding-top: 2rem !important;
             padding-bottom: 3rem !important;
             max-width: 1300px;
-        }
+        }}
 
-        .greeting-header {
+        .greeting-header {{
             font-size: 2.2rem;
             font-weight: 500;
-            color: #202124 !important;
+            color: {text_main} !important;
             margin-bottom: 0.1rem;
             letter-spacing: -0.5px;
         }
-        .greeting-sub {
+        .greeting-sub {{
             font-size: 1rem;
-            color: #5F6368 !important;
+            color: {text_sub} !important;
             margin-bottom: 2rem;
         }
 
-        /* CARD BIANCHE E TESTO FORZATO PER EVITARE PROBLEMI DI CONTRASTO */
-        .fintech-card {
-            background-color: #FFFFFF !important;
+        .fintech-card {{
+            background-color: {bg_card} !important;
             border-radius: 16px;
             padding: 24px;
-            box-shadow: 0 1px 3px rgba(60,64,67,0.1), 0 4px 8px rgba(60,64,67,0.04);
-            border: 1px solid #E8EAED;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.15), 0 4px 8px rgba(0,0,0,0.08);
+            border: 1px solid {border_card};
             transition: all 0.25s ease-in-out;
             margin-bottom: 16px;
         }
-        .fintech-card:hover {
-            box-shadow: 0 6px 16px rgba(60,64,67,0.14);
+        .fintech-card:hover {{
             transform: translateY(-2px);
-        }
+        }}
 
-        .card-label {
+        .card-label {{
             font-size: 0.8rem;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.8px;
-            color: #5F6368 !important;
+            color: {text_sub} !important;
             margin-bottom: 10px;
             display: flex;
             align-items: center;
             gap: 8px;
         }
 
-        .card-value {
+        .card-value {{
             font-size: 2.1rem;
             font-weight: 700;
             margin: 4px 0;
             letter-spacing: -0.5px;
-            color: #202124 !important;
-        }
+            color: {text_main} !important;
+        }}
 
-        .card-subtext {
+        .card-subtext {{
             font-size: 0.8rem;
-            color: #80868B !important;
+            color: {text_sub} !important;
             margin-top: 8px;
         }
 
-        .c-blue   { color: #4285F4 !important; }
-        .c-red    { color: #EA4335 !important; }
-        .c-green  { color: #34A853 !important; }
-        .c-yellow { color: #FBBC05 !important; }
+        .c-blue   {{ color: #4285F4 !important; }}
+        .c-red    {{ color: #EA4335 !important; }}
+        .c-green  {{ color: #34A853 !important; }}
+        .c-yellow {{ color: #FBBC05 !important; }}
 
-        .dot-blue   { width: 8px; height: 8px; border-radius: 50%; background-color: #4285F4; display: inline-block; }
-        .dot-red    { width: 8px; height: 8px; border-radius: 50%; background-color: #EA4335; display: inline-block; }
-        .dot-green  { width: 8px; height: 8px; border-radius: 50%; background-color: #34A853; display: inline-block; }
-        .dot-yellow { width: 8px; height: 8px; border-radius: 50%; background-color: #FBBC05; display: inline-block; }
+        .dot-blue   {{ width: 8px; height: 8px; border-radius: 50%; background-color: #4285F4; display: inline-block; }}
+        .dot-red    {{ width: 8px; height: 8px; border-radius: 50%; background-color: #EA4335; display: inline-block; }}
+        .dot-green  {{ width: 8px; height: 8px; border-radius: 50%; background-color: #34A853; display: inline-block; }}
+        .dot-yellow {{ width: 8px; height: 8px; border-radius: 50%; background-color: #FBBC05; display: inline-block; }}
 
-        .empty-state-box {
-            background-color: #FFFFFF !important;
-            border: 2px dashed #DADCE0;
+        .empty-state-box {{
+            background-color: {empty_bg} !important;
+            border: 2px dashed {empty_border};
             border-radius: 16px;
             padding: 70px 24px;
             text-align: center;
             margin: 28px 0;
-            box-shadow: 0 1px 2px rgba(60,64,67,0.04);
         }
-        .empty-state-text {
+        .empty-state-text {{
             font-size: 1.15rem;
             font-weight: 400;
-            color: #5F6368 !important;
+            color: {text_sub} !important;
             letter-spacing: 0.2px;
-        }
+        }}
 
-        .badge-active { background-color: #E6F4EA; color: #137333; padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
-        .badge-expired { background-color: #FCE8E6; color: #C5221F; padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
+        .badge-active {{ background-color: #E6F4EA; color: #137333; padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }}
+        .badge-expired {{ background-color: #FCE8E6; color: #C5221F; padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }}
 
-        .legal-footer {
+        .legal-footer {{
             margin-top: 60px;
             padding-top: 20px;
-            border-top: 1px solid #E8EAED;
+            border-top: 1px solid {border_card};
             text-align: center;
             font-size: 0.75rem;
-            color: #80868B;
+            color: {text_sub};
             line-height: 1.5;
         }
     </style>
     """, unsafe_allow_html=True)
 
-inject_enterprise_css()
+# Inietta il CSS in base alla scelta dell'utente
+inject_dynamic_css(st.session_state.theme_mode)
 
 # ==============================================================================
-# 2. GESTIONE DATABASE SQLITE & AUDIT LOG (PER ROLLBACK)
+# 2. GESTIONE DATABASE SQLITE & AUDIT LOG
 # ==============================================================================
 DB_FILE = "thirtyfive.db"
 LICENSE_PRICE = 35.00
@@ -272,13 +293,25 @@ def strip_personal_data_from_pos(uploaded_file):
     return clean_df, removed_cols
 
 # ==============================================================================
-# 4. SIDEBAR & PROFILAZIONE
+# 4. SIDEBAR (THEME SWITCHER, PROFILO & TEST POS)
 # ==============================================================================
 merchants_list = get_all_merchants()
 merchant_names = [m["name"] for m in merchants_list]
 default_index = merchant_names.index("Mario") if "Mario" in merchant_names else 0
 
 with st.sidebar:
+    st.markdown("### 🎨 Aspetto Grafico")
+    # THEME SWITCHER FORZATO
+    selected_theme = st.radio(
+        "Seleziona Tema Interfaccia:",
+        ["Light (Google Style)", "Dark (Pro FinTech)"],
+        index=0 if st.session_state.theme_mode == "Light (Google Style)" else 1
+    )
+    if selected_theme != st.session_state.theme_mode:
+        st.session_state.theme_mode = selected_theme
+        st.rerun()
+
+    st.markdown("---")
     st.markdown("### ⚙️ Pannello Simulazione")
     selected_merchant_name = st.selectbox("Negoziante attivo:", options=merchant_names, index=default_index)
 
@@ -369,7 +402,7 @@ with tab_dashboard:
                 st.dataframe(preview, use_container_width=True, height=290)
 
 # ------------------------------------------------------------------------------
-# TAB 2: ADMIN AVANZATO (CON ROLLBACK E PROVA GRATUITA)
+# TAB 2: ADMIN AVANZATO
 # ------------------------------------------------------------------------------
 with tab_admin:
     st.markdown("### 🛡️ Console Amministrazione Avanzata Thirtyfive")
