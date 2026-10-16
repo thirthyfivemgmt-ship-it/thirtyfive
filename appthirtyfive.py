@@ -3,7 +3,6 @@ import sqlite3
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
-import plotly.graph_objects as go
 
 # ==============================================================================
 # 1. CONFIGURAZIONE PAGINA E CSS "STEALTH" (STILE GOOGLE & STRIPE)
@@ -146,7 +145,6 @@ def get_db_connection():
 def init_db():
     conn = get_db_connection()
     cursor = conn.cursor()
-    # Tabella Negozianti
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS merchants (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -156,7 +154,6 @@ def init_db():
             total_paid REAL DEFAULT 0.0
         )
     """)
-    # Tabella Audit Log per consentire il Rollback (Revert) delle modifiche
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS audit_logs (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -210,7 +207,7 @@ def apply_license_action(merchant_id, days_to_add, price_to_add, action_name):
         today = datetime.now().date()
         current_exp = datetime.strptime(old_exp, "%Y-%m-%d").date()
         
-        if days_to_add < 0: # Kill-switch immediato
+        if days_to_add < 0:
             new_exp = (today - timedelta(days=1)).strftime("%Y-%m-%d")
             new_paid = old_paid
         else:
@@ -218,12 +215,10 @@ def apply_license_action(merchant_id, days_to_add, price_to_add, action_name):
             new_exp = (base_date + timedelta(days=days_to_add)).strftime("%Y-%m-%d")
             new_paid = old_paid + price_to_add
 
-        # Salva lo stato precedente nel log prima di modificarlo (per il tasto Revert)
         conn.execute(
             "INSERT INTO audit_logs (merchant_id, action_type, old_expiry, new_expiry, old_paid, new_paid) VALUES (?, ?, ?, ?, ?, ?)",
             (merchant_id, action_name, old_exp, new_exp, old_paid, new_paid)
         )
-        # Esegue la modifica
         conn.execute("UPDATE merchants SET expiry_date = ?, total_paid = ? WHERE id = ?", (new_exp, new_paid, merchant_id))
         conn.commit()
     conn.close()
@@ -235,9 +230,7 @@ def revert_last_action():
         m_id = last_log["merchant_id"]
         old_exp = last_log["old_expiry"]
         old_paid = last_log["old_paid"]
-        # Ripristina i valori precedenti
         conn.execute("UPDATE merchants SET expiry_date = ?, total_paid = ? WHERE id = ?", (old_exp, old_paid, m_id))
-        # Elimina il log
         conn.execute("DELETE FROM audit_logs WHERE id = ?", (last_log["id"],))
         conn.commit()
         conn.close()
@@ -361,27 +354,11 @@ with tab_dashboard:
 
             col_chart, col_table = st.columns([2, 1])
             with col_chart:
-                st.markdown("#### 📈 Andamento Incassi (Plotly FinTech)")
+                st.markdown("#### 📈 Andamento Incassi Giornalieri")
                 daily_summary = clean_pos_df.groupby(clean_pos_df["Data"].dt.date)["Importo"].sum().reset_index()
                 daily_summary.columns = ["Giorno", "Incasso (€)"]
-                
-                fig = go.Figure()
-                fig.add_trace(go.Scatter(
-                    x=daily_summary["Giorno"], y=daily_summary["Incasso (€)"],
-                    mode="lines+markers",
-                    line=dict(color="#4285F4", width=3, shape="spline"),
-                    marker=dict(size=6, color="#FFFFFF", line=dict(color="#4285F4", width=2)),
-                    fill="tozeroy", fillcolor="rgba(66, 133, 244, 0.1)",
-                    hovertemplate="<b>%{x}</b><br>Incasso: <b>%{y:,.2f} €</b><extra></extra>"
-                ))
-                fig.update_layout(
-                    margin=dict(l=10, r=10, t=10, b=10),
-                    paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", height=300,
-                    xaxis=dict(showgrid=False, linecolor="#E8EAED"),
-                    yaxis=dict(showgrid=True, gridcolor="#F1F3F4", zeroline=False, tickSuffix=" €"),
-                    hoverlabel=dict(bgcolor="#202124", font_size=13, font_family="Roboto")
-                )
-                st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+                # Grafico nativo Streamlit (zero errori di libreria)
+                st.bar_chart(daily_summary.set_index("Giorno"), color="#4285F4")
 
             with col_table:
                 st.markdown("#### 🔒 Dati Anonimizzati")
@@ -398,10 +375,9 @@ with tab_admin:
     admin_pwd = st.text_input("Master Password:", type="password")
 
     if admin_pwd == "admin35":
-        # BARRA DEGLI STRUMENTI ADMIN (Rollback & Nuovo Utente)
         col_tool1, col_tool2 = st.columns([1, 1])
         with col_tool1:
-            if st.button("↩️ Annulla Ultima Modifica (Rollback)", use_container_width=True, help="Ripristina la situazione prima dell'ultimo clic su estendi o kill."):
+            if st.button("↩️ Annulla Ultima Modifica (Rollback)", use_container_width=True):
                 if revert_last_action():
                     st.success("Ultima modifica annullata con successo!")
                     st.rerun()
@@ -440,9 +416,7 @@ with tab_admin:
             st.markdown(f'<div class="fintech-card"><div class="card-label"><span class="dot-red"></span>Licenze Scadute</div><div class="card-value c-red">{len(all_users)-act_cnt}</div></div>', unsafe_allow_html=True)
 
         st.markdown("#### 👥 Gestione Abbonamenti & Trial")
-        
-        # Selettore personalizzato dei giorni di estensione per singolo utente
-        custom_days = st.sidebar.selectbox("Durata estensione licenza (Admin):", [7, 14, 30, 60, 90], index=2, help="Scegli quanti giorni aggiungere quando clicchi 'Estendi' nella tabella.")
+        custom_days = st.sidebar.selectbox("Durata estensione licenza (Admin):", [7, 14, 30, 60, 90], index=2)
 
         for u in all_users:
             exp = datetime.strptime(u["expiry_date"], "%Y-%m-%d").date()
@@ -454,7 +428,6 @@ with tab_admin:
             with uc2: st.markdown(badge, unsafe_allow_html=True)
             with uc3: st.markdown(f"Scadenza: `{exp.strftime('%d/%m/%Y')}`<br><small>Versato: {u['total_paid']:.0f}€</small>", unsafe_allow_html=True)
             with uc4:
-                # Calcola il prezzo proporzionale in base ai giorni scelti (es. 30gg = 35€)
                 price_proportional = (LICENSE_PRICE / 30) * custom_days
                 if st.button(f"➕ +{custom_days}gg (+{price_proportional:.0f}€)", key=f"ext_{u['id']}", use_container_width=True):
                     apply_license_action(u["id"], days_to_add=custom_days, price_to_add=price_proportional, action_name=f"Estensione +{custom_days}gg")
