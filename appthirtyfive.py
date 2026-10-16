@@ -93,7 +93,7 @@ def inject_dynamic_css(mode):
             display: flex;
             align-items: center;
             gap: 8px;
-        }
+        }}
 
         .card-value {{
             font-size: 2.1rem;
@@ -107,7 +107,7 @@ def inject_dynamic_css(mode):
             font-size: 0.8rem;
             color: {text_sub} !important;
             margin-top: 8px;
-        }
+        }}
 
         .c-blue   {{ color: #4285F4 !important; }}
         .c-red    {{ color: #EA4335 !important; }}
@@ -126,7 +126,7 @@ def inject_dynamic_css(mode):
             padding: 70px 24px;
             text-align: center;
             margin: 28px 0;
-        }
+        }}
         .empty-state-text {{
             font-size: 1.15rem;
             font-weight: 400;
@@ -145,7 +145,7 @@ def inject_dynamic_css(mode):
             font-size: 0.75rem;
             color: {text_sub};
             line-height: 1.5;
-        }
+        }}
     </style>
     """, unsafe_allow_html=True)
 
