@@ -20,9 +20,9 @@ def inject_enterprise_css():
         @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
 
         .stApp {
-            background-color: #F8F9FA;
-            font-family: 'Roboto', sans-serif;
-            color: #202124;
+            background-color: #F8F9FA !important;
+            font-family: 'Roboto', sans-serif !important;
+            color: #202124 !important;
         }
 
         #MainMenu {visibility: hidden;}
@@ -39,18 +39,19 @@ def inject_enterprise_css():
         .greeting-header {
             font-size: 2.2rem;
             font-weight: 500;
-            color: #202124;
+            color: #202124 !important;
             margin-bottom: 0.1rem;
             letter-spacing: -0.5px;
         }
         .greeting-sub {
             font-size: 1rem;
-            color: #5F6368;
+            color: #5F6368 !important;
             margin-bottom: 2rem;
         }
 
+        /* CARD BIANCHE E TESTO FORZATO PER EVITARE PROBLEMI DI CONTRASTO */
         .fintech-card {
-            background-color: #FFFFFF;
+            background-color: #FFFFFF !important;
             border-radius: 16px;
             padding: 24px;
             box-shadow: 0 1px 3px rgba(60,64,67,0.1), 0 4px 8px rgba(60,64,67,0.04);
@@ -68,7 +69,7 @@ def inject_enterprise_css():
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.8px;
-            color: #5F6368;
+            color: #5F6368 !important;
             margin-bottom: 10px;
             display: flex;
             align-items: center;
@@ -80,18 +81,19 @@ def inject_enterprise_css():
             font-weight: 700;
             margin: 4px 0;
             letter-spacing: -0.5px;
+            color: #202124 !important;
         }
 
         .card-subtext {
             font-size: 0.8rem;
-            color: #80868B;
+            color: #80868B !important;
             margin-top: 8px;
         }
 
-        .c-blue   { color: #4285F4; }
-        .c-red    { color: #EA4335; }
-        .c-green  { color: #34A853; }
-        .c-yellow { color: #FBBC05; }
+        .c-blue   { color: #4285F4 !important; }
+        .c-red    { color: #EA4335 !important; }
+        .c-green  { color: #34A853 !important; }
+        .c-yellow { color: #FBBC05 !important; }
 
         .dot-blue   { width: 8px; height: 8px; border-radius: 50%; background-color: #4285F4; display: inline-block; }
         .dot-red    { width: 8px; height: 8px; border-radius: 50%; background-color: #EA4335; display: inline-block; }
@@ -99,7 +101,7 @@ def inject_enterprise_css():
         .dot-yellow { width: 8px; height: 8px; border-radius: 50%; background-color: #FBBC05; display: inline-block; }
 
         .empty-state-box {
-            background-color: #FFFFFF;
+            background-color: #FFFFFF !important;
             border: 2px dashed #DADCE0;
             border-radius: 16px;
             padding: 70px 24px;
@@ -110,7 +112,7 @@ def inject_enterprise_css():
         .empty-state-text {
             font-size: 1.15rem;
             font-weight: 400;
-            color: rgba(95, 99, 104, 0.65);
+            color: #5F6368 !important;
             letter-spacing: 0.2px;
         }
 
@@ -357,7 +359,6 @@ with tab_dashboard:
                 st.markdown("#### 📈 Andamento Incassi Giornalieri")
                 daily_summary = clean_pos_df.groupby(clean_pos_df["Data"].dt.date)["Importo"].sum().reset_index()
                 daily_summary.columns = ["Giorno", "Incasso (€)"]
-                # Grafico nativo Streamlit (zero errori di libreria)
                 st.bar_chart(daily_summary.set_index("Giorno"), color="#4285F4")
 
             with col_table:
